@@ -4,7 +4,7 @@
   "description": "sync files using webdav",
   "version": "1.0.6",
   "author": {
-        "name": "leehaoze"
+    "name": "leehaoze"
   },
   "license": "MIT",
   "publisher": "leehaoze",
@@ -18,7 +18,9 @@
     "webdav",
     "sync"
   ],
-  "activationEvents": ["onStartupFinished"],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
@@ -62,7 +64,7 @@
       "properties": {
         "webdav-sync.serverHost": {
           "type": "string",
-          "default": "", 
+          "default": "",
           "description": "WebDAV 服务器地址，需要包含协议、主机、端口、路径，例如 http://1.1.1.1:8080/webdav"
         },
         "webdav-sync.username": {
@@ -81,7 +83,7 @@
           "description": "远端服务器的文件路径。与服务器Path不同，该配置项配置的是服务器上的文件路径。"
         },
         "webdav-sync.localPath": {
-          "type": "string", 
+          "type": "string",
           "default": "",
           "description": "本地路径，与服务端路径相对应，一般为当前项目根目录。"
         }
@@ -104,12 +106,12 @@
   },
   "icon": "icon.png",
   "repository": {
-        "type": "git",
-        "url": "https://github.com/leehaoze/webdav-sync"
-    },
-    "bugs": {
-        "url": "https://github.com/leehaoze/webdav-sync/issues"
-    },
+    "type": "git",
+    "url": "https://github.com/leehaoze/webdav-sync"
+  },
+  "bugs": {
+    "url": "https://github.com/leehaoze/webdav-sync/issues"
+  },
   "devDependencies": {
     "@types/vscode": "^1.71.0",
     "@types/mocha": "^10.0.9",
@@ -125,5 +127,8 @@
   },
   "dependencies": {
     "webdav": "^5.3.1"
+  },
+  "allowScripts": {
+    "esbuild@0.24.0": true
   }
 }
