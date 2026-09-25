@@ -5,9 +5,6 @@ import * as path from 'path';
 
 import { createClient, WebDAVClient } from 'webdav';
 
-let outputChannel: vscode.OutputChannel;
-let statusBarItem: vscode.StatusBarItem;
-
 // 路径配置
 interface PathConfig {
 	localBasePath: string;
@@ -16,10 +13,13 @@ interface PathConfig {
 
 interface PathMapper {
 	config: PathConfig;
-	
+
 	// 根据本地路径获取远程路径
 	getRemotePath(localPath: string): string;
 }
+
+let logger: vscode.OutputChannel;
+let statusBarItem: vscode.StatusBarItem;
 
 const pathConfig: PathConfig = {
 	localBasePath: '',
@@ -36,13 +36,13 @@ const pathMapper: PathMapper = {
 
 		// 去除本地基础路径
 		let relativePath = normalizedLocalPath.replace(normalizedBasePath, '');
-		
+
 		// 移除开头的斜杠和可能存在的盘符（比如 C:）
 		relativePath = relativePath.replace(/^[\/\\]/, '').replace(/^[A-Za-z]:/, '');
-		
+
 		// 确保远程基础路径不以斜杠结尾
 		const remoteBase = this.config.remoteBasePath.replace(/\/$/, '');
-		
+
 		// 组合远程路径
 		return `${remoteBase}/${relativePath}`;
 	}
@@ -57,7 +57,7 @@ let client: WebDAVClient | null = null;
 async function activate(context: vscode.ExtensionContext) {
 	// 从 workspace state 中恢复同步状态，默认为 true (暂停状态)
 	isSyncPaused = context.workspaceState.get('webdav-sync.isSyncPaused', true);
-	
+
 	// 创建状态栏项
 	statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
 	context.subscriptions.push(statusBarItem);
@@ -65,10 +65,10 @@ async function activate(context: vscode.ExtensionContext) {
 
 	// 开启log窗口
 	context.subscriptions.push(
-        outputChannel = vscode.window.createOutputChannel('webdav-sync')
-    );
-    outputChannel.hide();
-	
+		logger = vscode.window.createOutputChannel('webdav-sync')
+	);
+	logger.hide();
+
 	// 连接 WebDAV 服务器
 	client = await connectWebDAV();
 
@@ -85,21 +85,21 @@ async function activate(context: vscode.ExtensionContext) {
 	// 监听配置变更
 	context.subscriptions.push(
 		vscode.workspace.onDidChangeConfiguration(async e => {
-			if (e.affectsConfiguration('webdav-sync.localPath') || 
+			if (e.affectsConfiguration('webdav-sync.localPath') ||
 				e.affectsConfiguration('webdav-sync.remotePath') ||
 				e.affectsConfiguration('webdav-sync.serverHost') ||
 				e.affectsConfiguration('webdav-sync.username') ||
 				e.affectsConfiguration('webdav-sync.password')) {
-				
-				outputChannel.appendLine('检测到配置变更，重新初始化...');
-				
+
+				logger.appendLine('检测到配置变更，重新初始化...');
+
 				// 重新连接WebDAV
 				if (e.affectsConfiguration('webdav-sync.serverHost') ||
 					e.affectsConfiguration('webdav-sync.username') ||
 					e.affectsConfiguration('webdav-sync.password')) {
 					client = await connectWebDAV();
 				}
-				
+
 				// 重新初始化路径配置
 				if (e.affectsConfiguration('webdav-sync.localPath') ||
 					e.affectsConfiguration('webdav-sync.remotePath')) {
@@ -107,15 +107,15 @@ async function activate(context: vscode.ExtensionContext) {
 					if (newConfig) {
 						pathConfig.localBasePath = newConfig.localBasePath;
 						pathConfig.remoteBasePath = newConfig.remoteBasePath;
-						outputChannel.appendLine(`路径配置已更新：
+						logger.appendLine(`路径配置已更新：
 本地路径: ${pathConfig.localBasePath}
 远程路径: ${pathConfig.remoteBasePath}`);
 					}
 				}
-				
+
 				// 更新状态栏
 				updateStatusBarItem();
-				
+
 				// 如果有文件监听器，需要重新创建
 				if (fileWatcher) {
 					fileWatcher.dispose();
@@ -187,12 +187,12 @@ async function activate(context: vscode.ExtensionContext) {
 					// 同步所有文件
 					for (const file of files) {
 						if (token.isCancellationRequested) {
-							outputChannel.appendLine('同步操作已取消');
+							logger.appendLine('同步操作已取消');
 							break;
 						}
 
 						if (!client) {
-							outputChannel.appendLine('WebDAV 连接已断开，同步操作终止');
+							logger.appendLine('WebDAV 连接已断开，同步操作终止');
 							break;
 						}
 
@@ -204,12 +204,12 @@ async function activate(context: vscode.ExtensionContext) {
 								increment: (100 / totalFiles)
 							});
 						} catch (error) {
-							outputChannel.appendLine(`同步文件失败 ${file.fsPath}: ${error}`);
+							logger.appendLine(`同步文件失败 ${file.fsPath}: ${error}`);
 							continue;
 						}
 					}
 
-					outputChannel.appendLine(`文件夹同步完成，共处理 ${processedFiles}/${totalFiles} 个文件`);
+					logger.appendLine(`文件夹同步完成，共处理 ${processedFiles}/${totalFiles} 个文件`);
 					vscode.window.showInformationMessage(`文件夹同步完成: ${uri.fsPath}，共处理 ${processedFiles}/${totalFiles} 个文件`);
 				});
 			} else {
@@ -249,12 +249,12 @@ async function activate(context: vscode.ExtensionContext) {
 				const totalFiles = files.length;
 				let processedFiles = 0;
 
-				outputChannel.appendLine(`开始同步所有文件，共 ${totalFiles} 个文件`);
+				logger.appendLine(`开始同步所有文件，共 ${totalFiles} 个文件`);
 
 				// 同步每个文件
 				for (const file of files) {
 					if (token.isCancellationRequested) {
-						outputChannel.appendLine('同步操作已取消');
+						logger.appendLine('同步操作已取消');
 						break;
 					}
 
@@ -266,17 +266,17 @@ async function activate(context: vscode.ExtensionContext) {
 							increment: (100 / totalFiles)
 						});
 					} catch (error) {
-						outputChannel.appendLine(`同步文件失败 ${file.fsPath}: ${error}`);
+						logger.appendLine(`同步文件失败 ${file.fsPath}: ${error}`);
 						// 继续同步其他文件
 						continue;
 					}
 				}
 
-				outputChannel.appendLine(`同步完成，共处理 ${processedFiles}/${totalFiles} 个文件`);
+				logger.appendLine(`同步完成，共处理 ${processedFiles}/${totalFiles} 个文件`);
 				vscode.window.showInformationMessage(`同步完成，共处理 ${processedFiles}/${totalFiles} 个文件`);
 			});
 		} catch (error) {
-			outputChannel.appendLine(`同步所有文件失败: ${error}`);
+			logger.appendLine(`同步所有文件失败: ${error}`);
 			vscode.window.showErrorMessage(`同步所有文件失败: ${error instanceof Error ? error.message : String(error)}`);
 		}
 	});
@@ -286,7 +286,7 @@ async function activate(context: vscode.ExtensionContext) {
 		isSyncPaused = true;
 		await context.workspaceState.update('webdav-sync.isSyncPaused', true);
 		updateStatusBarItem();
-		outputChannel.appendLine('WebDAV 同步已暂停');
+		logger.appendLine('WebDAV 同步已暂停');
 		vscode.window.showInformationMessage('WebDAV 同步已暂停');
 	});
 
@@ -300,7 +300,7 @@ async function activate(context: vscode.ExtensionContext) {
 		isSyncPaused = false;
 		await context.workspaceState.update('webdav-sync.isSyncPaused', false);
 		updateStatusBarItem();
-		outputChannel.appendLine('WebDAV 同步已恢复');
+		logger.appendLine('WebDAV 同步已恢复');
 		vscode.window.showInformationMessage('WebDAV 同步已恢复');
 	});
 
@@ -318,9 +318,9 @@ async function activate(context: vscode.ExtensionContext) {
 	if (!client) {
 		vscode.window.showErrorMessage('WebDAV 连接失败，请检查配置并使用命令面板中的"Reconnect WebDAV"重新连接');
 	} else {
-		outputChannel.appendLine(`WebDAV 同步已启动，当前处于${isSyncPaused ? '暂停' : '运行'}状态`);
+		logger.appendLine(`WebDAV 同步已启动，当前处于${isSyncPaused ? '暂停' : '运行'}状态`);
 		vscode.window.showInformationMessage(
-			isSyncPaused 
+			isSyncPaused
 				? 'WebDAV 同步已启动，当前处于暂停状态。使用命令面板中的"Start WebDAV Sync"来开始同步。'
 				: 'WebDAV 同步已启动，当前处于运行状态。'
 		);
@@ -360,59 +360,59 @@ function watchFile(webdavClient: WebDAVClient, pathConfig: PathConfig): vscode.F
 
 // 同步文件到 WebDAV 服务器
 async function syncToWebDAV(
-    webdavClient: WebDAVClient, 
-    pathConfig: PathConfig, 
-    uri: vscode.Uri, 
-    action: 'create' | 'modify' | 'delete' = 'modify',
-    showNotification: boolean = true
+	webdavClient: WebDAVClient,
+	pathConfig: PathConfig,
+	uri: vscode.Uri,
+	action: 'create' | 'modify' | 'delete' = 'modify',
+	showNotification: boolean = true
 ) {
-    try {
-        // 获取相对路径
-        const relativePath = path.relative(pathConfig.localBasePath, uri.fsPath);
-        // 获取远程路径
-        const remotePath = pathMapper.getRemotePath(uri.fsPath);
+	try {
+		// 获取相对路径
+		const relativePath = path.relative(pathConfig.localBasePath, uri.fsPath);
+		// 获取远程路径
+		const remotePath = pathMapper.getRemotePath(uri.fsPath);
 
-        outputChannel.appendLine(`准备同步文件: ${uri.fsPath}`);
-        outputChannel.appendLine(`远程路径: ${remotePath}`);
-        outputChannel.appendLine(`动作: ${action}`);
+		logger.appendLine(`准备同步文件: ${uri.fsPath}`);
+		logger.appendLine(`远程路径: ${remotePath}`);
+		logger.appendLine(`动作: ${action}`);
 
-        switch (action) {
-            case 'create':
-            case 'modify':
-                // 确保远程目录存在
-                const remoteDir = path.dirname(remotePath);
-                await ensureRemoteDirectory(webdavClient, remoteDir);
-                
-                // 读取文件内容
-                const content = await vscode.workspace.fs.readFile(uri);
-                
-                // 上传文件
-                await webdavClient.putFileContents(remotePath, content, { 
-                    overwrite: true,
-                    onUploadProgress: (progress) => {
-                        outputChannel.appendLine(`上传进度: ${progress.loaded}/${progress.total}`);
-                    }
-                });
-                
-                if (showNotification) {
-                    vscode.window.setStatusBarMessage(`文件已同步: ${relativePath}`, 3000);
-                }
-                break;
+		switch (action) {
+			case 'create':
+			case 'modify':
+				// 确保远程目录存在
+				const remoteDir = path.dirname(remotePath);
+				await ensureRemoteDirectory(webdavClient, remoteDir);
 
-            case 'delete':
-                // 删除远程文件
-                await webdavClient.deleteFile(remotePath);
-                if (showNotification) {
-                    vscode.window.setStatusBarMessage(`文件已删除: ${relativePath}`, 3000);
-                }
-                break;
-        }
-    } catch (error) {
-        outputChannel.appendLine(`同步失败: ${error instanceof Error ? error.message : String(error)}`);
-        if (showNotification) {
-            vscode.window.showErrorMessage(`同步失败: ${error instanceof Error ? error.message : String(error)}`);
-        }
-    }
+				// 读取文件内容
+				const content = await vscode.workspace.fs.readFile(uri);
+
+				// 上传文件
+				await webdavClient.putFileContents(remotePath, content, {
+					overwrite: true,
+					onUploadProgress: (progress) => {
+						logger.appendLine(`上传进度: ${progress.loaded}/${progress.total}`);
+					}
+				});
+
+				if (showNotification) {
+					vscode.window.setStatusBarMessage(`文件已同步: ${relativePath}`, 3000);
+				}
+				break;
+
+			case 'delete':
+				// 删除远程文件
+				await webdavClient.deleteFile(remotePath);
+				if (showNotification) {
+					vscode.window.setStatusBarMessage(`文件已删除: ${relativePath}`, 3000);
+				}
+				break;
+		}
+	} catch (error) {
+		logger.appendLine(`同步失败: ${error instanceof Error ? error.message : String(error)}`);
+		if (showNotification) {
+			vscode.window.showErrorMessage(`同步失败: ${error instanceof Error ? error.message : String(error)}`);
+		}
+	}
 }
 
 // 确保远程目录存在
@@ -423,7 +423,7 @@ async function ensureRemoteDirectory(client: WebDAVClient, dirPath: string) {
 			await client.createDirectory(dirPath, { recursive: true });
 		}
 	} catch (error) {
-		outputChannel.appendLine(`创建远程目录失败: ${error}`);
+		logger.appendLine(`创建远程目录失败: ${error}`);
 		throw error;
 	}
 }
@@ -438,7 +438,7 @@ function isHiddenFile(pathConfig: PathConfig, uri: vscode.Uri): boolean {
 	const pathParts = relativePath.split(path.sep);
 	for (const part of pathParts) {
 		if (part.startsWith('.')) {
-			outputChannel.appendLine(`跳过隐藏文件: ${uri.fsPath}`);
+			logger.appendLine(`跳过隐藏文件: ${uri.fsPath}`);
 			return true;
 		}
 	}
@@ -483,7 +483,7 @@ async function connectWebDAV(): Promise<WebDAVClient | null> {
 
 	if (!serverHost) {
 		vscode.window.showErrorMessage('请在设置中配置 webdav-sync.serverHost');
-		return null;	
+		return null;
 	}
 
 	const client = createClient(serverHost, {
@@ -505,18 +505,18 @@ async function connectWebDAV(): Promise<WebDAVClient | null> {
 // 递归获取所有文件
 async function getAllFiles(folder: vscode.Uri): Promise<vscode.Uri[]> {
 	const files: vscode.Uri[] = [];
-	
+
 	async function traverse(uri: vscode.Uri) {
 		const entries = await vscode.workspace.fs.readDirectory(uri);
-		
+
 		for (const [name, type] of entries) {
 			const fullPath = vscode.Uri.joinPath(uri, name);
-			
+
 			// 跳过隐藏文件和文件夹
 			if (isHiddenFile(pathConfig, fullPath)) {
 				continue;
 			}
-			
+
 			if (type === vscode.FileType.Directory) {
 				// 递归处理子目录
 				await traverse(fullPath);
@@ -525,7 +525,7 @@ async function getAllFiles(folder: vscode.Uri): Promise<vscode.Uri[]> {
 			}
 		}
 	}
-	
+
 	await traverse(folder);
 	return files;
 }
