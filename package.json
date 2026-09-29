@@ -1,139 +1,144 @@
 {
-  "name": "webdav-bisync",
-  "displayName": "WebDAV Sync (Two-Way Ver.)",
-  "description": "Sync files using WebDAV, which supports both upload to & download from the server!",
-  "version": "1.0.0",
-  "author": {
-    "name": "leehaoze"
-  },
-  "contributors": [
-	{
-		"name": "chishima-chan"
+	"name": "webdav-bisync",
+	"displayName": "WebDAV Sync (Two-Way Ver.)",
+	"description": "Sync files using WebDAV, which supports both upload to & download from the server!",
+	"version": "1.0.0",
+	"author": {
+		"name": "leehaoze"
+	},
+	"contributors": [
+		{
+			"name": "chishima-chan"
+		}
+	],
+	"license": "MIT",
+	"publisher": "chishima-chan",
+	"engines": {
+		"vscode": "^1.71.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"keywords": [
+		"webdav",
+		"sync"
+	],
+	"activationEvents": [
+		"onStartupFinished"
+	],
+	"main": "./dist/extension.js",
+	"contributes": {
+		"commands": [
+			{
+				"command": "webdav-sync.syncFile",
+				"title": "Sync File To WebDAV"
+			},
+			{
+				"command": "webdav-sync.syncAll",
+				"title": "Sync All To WebDAV Server"
+			},
+			{
+				"command": "webdav-sync.pauseSync",
+				"title": "Stop WebDAV Sync"
+			},
+			{
+				"command": "webdav-sync.resumeSync",
+				"title": "Start WebDAV Sync"
+			},
+			{
+				"command": "webdav-sync.reconnect",
+				"title": "Reconnect WebDAV"
+			}
+		],
+		"menus": {
+			"explorer/context": [
+				{
+					"command": "webdav-sync.syncFile",
+					"group": "navigation"
+				}
+			],
+			"editor/context": [
+				{
+					"command": "webdav-sync.syncFile",
+					"group": "navigation"
+				}
+			]
+		},
+		"configuration": {
+			"title": "WebDAV Sync (Two-Way Ver.)",
+			"properties": {
+				"webdav-sync.serverHost": {
+					"type": "string",
+					"default": "",
+					"description": "WebDAV 服务器地址\n需要包含协议、主机、端口、路径，即远端服务器的根目录，例如 http://1.1.1.1:8080/webdav/ 。"
+				},
+				"webdav-sync.username": {
+					"type": "string",
+					"default": "",
+					"description": "WebDAV 服务器用户名"
+				},
+				"webdav-sync.password": {
+					"type": "string",
+					"default": "",
+					"description": "WebDAV 服务器密码"
+				},
+				"webdav-sync.remotePath": {
+					"type": "string",
+					"default": "",
+					"description": "需要同步的远端文件夹的绝对路径（远端同步根路径）\n与服务器地址不同，该项配置的是远端服务器根目录下指向同步文件夹的路径。"
+				},
+				"webdav-sync.localPath": {
+					"type": "string",
+					"default": "",
+					"description": "需要同步的本地文件夹的绝对路径（本地同步根路径）"
+				},
+				"webdav-sync.shouldSyncHidden": {
+					"type": "boolean",
+					"default": false,
+					"description": "是否同步以“.”开头的文件与文件夹"
+				}
+			}
+		}
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run package",
+		"compile": "npm run check-types && npm run lint && node esbuild.js",
+		"watch": "npm-run-all -p watch:*",
+		"watch:esbuild": "node esbuild.js --watch",
+		"watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
+		"package": "npm run check-types && npm run lint && node esbuild.js --production",
+		"compile-tests": "tsc -p . --outDir out",
+		"watch-tests": "tsc -p . -w --outDir out",
+		"pretest": "npm run compile-tests && npm run compile && npm run lint",
+		"check-types": "tsc --noEmit",
+		"lint": "eslint src",
+		"test": "vscode-test"
+	},
+	"icon": "icon.png",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/142428525/vscode-webdav-bisync"
+	},
+	"bugs": {
+		"url": "https://github.com/142428525/vscode-webdav-bisync/issues"
+	},
+	"devDependencies": {
+		"@types/vscode": "^1.71.0",
+		"@types/mocha": "^10.0.9",
+		"@types/node": "20.x",
+		"@typescript-eslint/eslint-plugin": "^8.10.0",
+		"@typescript-eslint/parser": "^8.7.0",
+		"eslint": "^9.13.0",
+		"esbuild": "^0.24.0",
+		"npm-run-all": "^4.1.5",
+		"typescript": "^5.6.3",
+		"@vscode/test-cli": "^0.0.10",
+		"@vscode/test-electron": "^2.4.1"
+	},
+	"dependencies": {
+		"webdav": "^5.3.1"
+	},
+	"allowScripts": {
+		"esbuild@0.24.0": true
 	}
-  ],
-  "license": "MIT",
-  "publisher": "chishima-chan",
-  "engines": {
-    "vscode": "^1.71.0"
-  },
-  "categories": [
-    "Other"
-  ],
-  "keywords": [
-    "webdav",
-    "sync"
-  ],
-  "activationEvents": [
-    "onStartupFinished"
-  ],
-  "main": "./dist/extension.js",
-  "contributes": {
-    "commands": [
-      {
-        "command": "webdav-sync.syncFile",
-        "title": "Sync File To WebDAV"
-      },
-      {
-        "command": "webdav-sync.syncAll",
-        "title": "Sync All To WebDAV Server"
-      },
-      {
-        "command": "webdav-sync.pauseSync",
-        "title": "Stop WebDAV Sync"
-      },
-      {
-        "command": "webdav-sync.resumeSync",
-        "title": "Start WebDAV Sync"
-      },
-      {
-        "command": "webdav-sync.reconnect",
-        "title": "Reconnect WebDAV"
-      }
-    ],
-    "menus": {
-      "explorer/context": [
-        {
-          "command": "webdav-sync.syncFile",
-          "group": "navigation"
-        }
-      ],
-      "editor/context": [
-        {
-          "command": "webdav-sync.syncFile",
-          "group": "navigation"
-        }
-      ]
-    },
-    "configuration": {
-      "title": "WebDAV Sync (Two-Way Ver.)",
-      "properties": {
-        "webdav-sync.serverHost": {
-          "type": "string",
-          "default": "",
-          "description": "WebDAV 服务器地址，需要包含协议、主机、端口、路径，例如 http://1.1.1.1:8080/webdav"
-        },
-        "webdav-sync.username": {
-          "type": "string",
-          "default": "",
-          "description": "WebDAV 服务器用户名"
-        },
-        "webdav-sync.password": {
-          "type": "string",
-          "default": "",
-          "description": "WebDAV 服务器密码"
-        },
-        "webdav-sync.remotePath": {
-          "type": "string",
-          "default": "",
-          "description": "远端服务器的文件路径。与服务器Path不同，该配置项配置的是服务器上的文件路径。"
-        },
-        "webdav-sync.localPath": {
-          "type": "string",
-          "default": "",
-          "description": "本地路径，与服务端路径相对应，一般为当前项目根目录。"
-        }
-      }
-    }
-  },
-  "scripts": {
-    "vscode:prepublish": "npm run package",
-    "compile": "npm run check-types && npm run lint && node esbuild.js",
-    "watch": "npm-run-all -p watch:*",
-    "watch:esbuild": "node esbuild.js --watch",
-    "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
-    "package": "npm run check-types && npm run lint && node esbuild.js --production",
-    "compile-tests": "tsc -p . --outDir out",
-    "watch-tests": "tsc -p . -w --outDir out",
-    "pretest": "npm run compile-tests && npm run compile && npm run lint",
-    "check-types": "tsc --noEmit",
-    "lint": "eslint src",
-    "test": "vscode-test"
-  },
-  "icon": "icon.png",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/142428525/vscode-webdav-bisync"
-  },
-  "bugs": {
-    "url": "https://github.com/142428525/vscode-webdav-bisync/issues"
-  },
-  "devDependencies": {
-    "@types/vscode": "^1.71.0",
-    "@types/mocha": "^10.0.9",
-    "@types/node": "20.x",
-    "@typescript-eslint/eslint-plugin": "^8.10.0",
-    "@typescript-eslint/parser": "^8.7.0",
-    "eslint": "^9.13.0",
-    "esbuild": "^0.24.0",
-    "npm-run-all": "^4.1.5",
-    "typescript": "^5.6.3",
-    "@vscode/test-cli": "^0.0.10",
-    "@vscode/test-electron": "^2.4.1"
-  },
-  "dependencies": {
-    "webdav": "^5.3.1"
-  },
-  "allowScripts": {
-    "esbuild@0.24.0": true
-  }
 }
