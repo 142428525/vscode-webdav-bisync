@@ -48,6 +48,10 @@
 			{
 				"command": "webdav-sync.reconnect",
 				"title": "Reconnect WebDAV"
+			},
+			{
+				"command": "webdav-sync.shiftSyncMode",
+				"title": "Shift Sync Mode"
 			}
 		],
 		"menus": {
@@ -70,7 +74,7 @@
 				"webdav-sync.serverHost": {
 					"type": "string",
 					"default": "",
-					"description": "WebDAV 服务器地址\n需要包含协议、主机、端口、路径，即远端服务器的根目录，例如 http://1.1.1.1:8080/webdav/ 。"
+					"description": "WebDAV 服务器地址\n需要包含协议、主机、端口、路径，即远端服务器的根目录，例如：http://1.1.1.1:8080/webdav/"
 				},
 				"webdav-sync.username": {
 					"type": "string",
