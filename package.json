@@ -100,6 +100,21 @@
 					"type": "boolean",
 					"default": false,
 					"description": "是否同步以“.”开头的文件与文件夹"
+				},
+				"webdav-sync.conflictResolution": {
+					"type": "string",
+					"enum": [
+						"latest",
+						"local",
+						"remote"
+					],
+					"markdownEnumDescriptions": [
+						"保留最新",
+						"保留本地",
+						"保留远端"
+					],
+					"default": "latest",
+					"description": "本地与远端内容不一致时自动采用的解决方案"
 				}
 			}
 		}
