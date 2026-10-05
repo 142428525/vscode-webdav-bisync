@@ -99,7 +99,7 @@
 				"webdav-sync.shouldSyncHidden": {
 					"type": "boolean",
 					"default": false,
-					"description": "是否同步以“.”开头的文件与文件夹"
+					"description": "是否同步以“.”开头的文件与文件夹？"
 				},
 				"webdav-sync.conflictResolution": {
 					"type": "string",
@@ -114,7 +114,7 @@
 						"保留远端"
 					],
 					"default": "latest",
-					"description": "本地与远端内容不一致时自动采用的解决方案"
+					"description": "本地与远端的文件或文件夹修改日期不一致时，应优先保留哪边？"
 				}
 			}
 		}

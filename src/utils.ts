@@ -29,6 +29,7 @@ export namespace Literal {
 			export const USERNAME = 'username';
 			export const PASSWORD = 'password';
 			export const SHOULD_SYNC_HIDDEN = 'shouldSyncHidden';
+			export const CONFLICT_RESOLUTION = 'conflictResolution';
 		}
 
 		export const LOCAL_PATH = prefix(Raw.LOCAL_PATH);
@@ -37,6 +38,9 @@ export namespace Literal {
 		export const USERNAME = prefix(Raw.USERNAME);
 		export const PASSWORD = prefix(Raw.PASSWORD);
 		export const SHOULD_SYNC_HIDDEN = prefix(Raw.SHOULD_SYNC_HIDDEN);
+		export const CONFLICT_RESOLUTION = prefix(Raw.SHOULD_SYNC_HIDDEN);
+
+		export type ConflictResolution = 'latest' | 'local' | 'remote';
 	}
 
 	export namespace Command {
